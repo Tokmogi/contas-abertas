@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }} · Contas Abertas{% endblock %}
+{% block conteudo %}
+<section class="destaque">
+  <h1>{{ titulo }}</h1>
+  <p>{{ mensagem }}</p>
+  <a class="botao" href="{{ url_for('painel.inicio' if current_user.is_authenticated else 'publico.inicio') }}">Voltar ao início</a>
+</section>
+{% endblock %}

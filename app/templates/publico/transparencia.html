@@ -1,32 +1,42 @@
 {% extends "base.html" %}
 {% block titulo %}Transparência · {{ org.nome }}{% endblock %}
 {% block conteudo %}
+{% if not org.publico %}
+<p class="aviso aviso-alerta">🔒 Esta página está <strong>privada</strong>: só a sua equipe consegue vê-la.
+  <a href="{{ url_for('painel.configuracoes') }}">Tornar pública</a></p>
+{% endif %}
+{% set link = url_for('publico.transparencia', slug=org.slug, _external=True) %}
 <section class="destaque">
+  <p class="selo">🔓 Contas abertas</p>
   <h1>{{ org.nome }}</h1>
   {% if org.causa %}<p>{{ org.causa }}</p>{% endif %}
   {% if org.cnpj %}<p class="discreto">CNPJ {{ org.cnpj }}</p>{% endif %}
+  {% if lancamentos %}<p class="discreto">Atualizado em {{ atualizado_em.strftime('%d/%m/%Y') }}</p>{% endif %}
+  <div class="compartilhar nao-imprimir">
+    <a class="botao secundario" target="_blank" rel="noopener"
+       href="https://wa.me/?text={{ ('Veja como a ' ~ org.nome ~ ' usa cada real doado: ' ~ link)|urlencode }}">Compartilhar no WhatsApp</a>
+    <button type="button" class="botao secundario" data-copiar="{{ link }}">Copiar link</button>
+  </div>
 </section>
 
 {% include "_resumo.html" %}
 
 <h2>Todas as movimentações</h2>
 {% if lancamentos %}
-<div class="tabela-rolagem">
-<table>
+<table class="lista-lancamentos">
   <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="num">Valor</th><th>Comprovante</th></tr></thead>
   <tbody>
   {% for l in lancamentos %}
     <tr>
-      <td>{{ l.data.strftime('%d/%m/%Y') }}</td>
-      <td>{{ l.descricao }}</td>
-      <td>{{ l.categoria }}</td>
-      <td class="num {{ 'positivo' if l.tipo == 'receita' else 'negativo' }}">{{ l.valor_assinado|moeda }}</td>
-      <td>{% if l.comprovante %}✔ arquivado{% elif l.tipo == 'despesa' %}<span class="pendente">pendente</span>{% endif %}</td>
+      <td class="col-data">{{ l.data.strftime('%d/%m/%Y') }}</td>
+      <td class="col-descricao">{{ l.descricao }}</td>
+      <td class="col-categoria">{{ l.categoria }}</td>
+      <td class="num col-valor {{ 'positivo' if l.tipo == 'receita' else 'negativo' }}">{{ l.valor_assinado|moeda }}</td>
+      <td class="col-comprovante">{% if l.comprovante %}<span class="ok">✔ arquivado</span>{% elif l.tipo == 'despesa' %}<span class="pendente">pendente</span>{% endif %}</td>
     </tr>
   {% endfor %}
   </tbody>
 </table>
-</div>
 <p class="discreto">Os comprovantes ficam guardados pela organização e podem ser solicitados a ela.
   Eles não são publicados porque podem conter dados pessoais (LGPD).</p>
 {% else %}

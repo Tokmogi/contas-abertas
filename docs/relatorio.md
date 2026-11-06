@@ -1,8 +1,7 @@
 # Relatório do Projeto Social: Contas Abertas
 
-**Aluno(a):** ✏️ seu nome
-**Curso / disciplina:** ✏️
-**Professor(a):** ✏️
+**Aluno:** Daniel Tokunaga
+**Disciplina:** Projeto Integrador
 **Repositório:** https://github.com/Tokmogi/contas-abertas
 **Post no LinkedIn:** ✏️ link
 
@@ -100,7 +99,18 @@ a lista de movimentações. Os detalhes e o modelo de dados estão em `docs/04-a
 - Página pública de transparência, que pode ser tornada privada.
 - Exportação de planilha (CSV, abre no Excel) para prestação de contas.
 - Isolamento dos dados entre organizações e senhas protegidas por hash.
-- 10 testes automatizados executados no GitHub Actions.
+- Convite de voluntários por link de uso único (vale 7 dias), fácil de enviar por WhatsApp.
+- Relatório de prestação de contas por período, com saldo inicial e final, totais por categoria e
+  linhas de assinatura, pronto para imprimir ou salvar em PDF.
+- Proteção contra CSRF em todos os formulários.
+- Interface pensada para o celular: menu recolhível, lançamentos em cartões, botão flutuante de
+  "novo lançamento", botões grandes de entrada/saída e foto do comprovante direto da câmera.
+- Filtro por mês e por tipo no painel, aviso de saídas sem comprovante e página pública com botão de
+  compartilhar no WhatsApp.
+- Segurança reforçada: proteção contra redirecionamento malicioso no login, cabeçalhos contra
+  clickjacking e comprovantes servidos sem permitir execução de scripts.
+- Datas no horário de Brasília, mesmo com o servidor em outro fuso.
+- 38 testes automatizados executados no GitHub Actions.
 
 ✏️ Insira aqui as capturas de tela (`docs/prototipos/`).
 
@@ -112,6 +122,7 @@ a lista de movimentações. Os detalhes e o modelo de dados estão em `docs/04-a
 | Comprovantes podem ter dados pessoais | Arquivos ficam privados; a página pública mostra só se o gasto foi comprovado |
 | Arredondamento de valores em dinheiro | Uso do tipo `Decimal` em vez de números de ponto flutuante |
 | Uso pelo celular | Layout responsivo e envio de foto direto da câmera |
+| Valores digitados como "1.500" (ponto de milhar) | Leitura do valor reconhece o padrão brasileiro, com teste automático |
 | Garantir que uma ONG não veja dados de outra | Todas as consultas filtradas pela organização do usuário, com teste automático |
 
 ✏️ Acrescente desafios que você enfrentou e como os professores ou colegas ajudaram.
@@ -134,10 +145,8 @@ recebidas e organizações interessadas. O texto usado está em `docs/post-linke
 
 ## 9. Próximos passos
 
-- Convite de mais voluntários por organização.
-- Relatório de prestação de contas em PDF.
 - Metas de arrecadação e botão de doação por Pix na página pública.
-- Proteção contra CSRF nos formulários e publicação em um servidor gratuito.
+- Publicação em um servidor gratuito.
 - Teste com mais organizações e incorporação das sugestões do LinkedIn.
 
 ## 10. Conclusão

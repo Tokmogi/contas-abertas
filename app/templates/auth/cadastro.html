@@ -2,14 +2,15 @@
 {% block titulo %}Cadastrar organização · Contas Abertas{% endblock %}
 {% block conteudo %}
 <form method="post" class="formulario">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <h1>Cadastre sua organização</h1>
   <p>Gratuito. Em poucos minutos sua ONG terá uma página pública de transparência.</p>
-  <label>Nome da organização *<input name="organizacao" value="{{ form.organizacao }}" required></label>
-  <label>Causa (ex.: "Reforço escolar para crianças do bairro")<input name="causa" value="{{ form.causa }}"></label>
-  <label>CNPJ (se tiver)<input name="cnpj" value="{{ form.cnpj }}"></label>
-  <label>Seu nome *<input name="nome" value="{{ form.nome }}" required></label>
-  <label>E-mail *<input type="email" name="email" value="{{ form.email }}" required></label>
-  <label>Senha (mínimo 8 caracteres) *<input type="password" name="senha" minlength="8" required></label>
+  <label>Nome da organização *<input name="organizacao" value="{{ form.organizacao }}" maxlength="120" required></label>
+  <label>Causa (ex.: "Reforço escolar para crianças do bairro")<input name="causa" value="{{ form.causa }}" maxlength="200"></label>
+  <label>CNPJ (se tiver)<input name="cnpj" value="{{ form.cnpj }}" maxlength="18" inputmode="numeric"></label>
+  <label>Seu nome *<input name="nome" value="{{ form.nome }}" maxlength="120" autocomplete="name" required></label>
+  <label>E-mail *<input type="email" name="email" value="{{ form.email }}" autocomplete="email" required></label>
+  <label>Senha (mínimo 8 caracteres) *<input type="password" name="senha" minlength="8" autocomplete="new-password" required></label>
   <button class="botao">Cadastrar</button>
 </form>
 {% endblock %}

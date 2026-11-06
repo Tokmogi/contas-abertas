@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block titulo %}Prestação de contas · {{ org.nome }}{% endblock %}
+{% block conteudo %}
+<form method="get" class="filtro-relatorio nao-imprimir">
+  <label>De<input type="date" name="inicio" value="{{ filtro_inicio }}"></label>
+  <label>Até<input type="date" name="fim" value="{{ filtro_fim }}"></label>
+  <button class="botao secundario">Filtrar período</button>
+  <button type="button" class="botao" onclick="window.print()">Imprimir ou salvar em PDF</button>
+</form>
+
+<article class="relatorio">
+  <header>
+    <h1>Relatório de prestação de contas</h1>
+    <p><strong>{{ org.nome }}</strong>{% if org.cnpj %} · CNPJ {{ org.cnpj }}{% endif %}</p>
+    {% if org.causa %}<p>{{ org.causa }}</p>{% endif %}
+    <p>Período:
+      {% if inicio %}{{ inicio.strftime('%d/%m/%Y') }} a {{ fim.strftime('%d/%m/%Y') }}{% else %}sem movimentações{% endif %}
+    </p>
+  </header>
+
+  <h2>Resumo</h2>
+  <table class="tabela-resumo">
+    <tr><td>Saldo no início do período</td><td class="num">{{ saldo_inicial|moeda }}</td></tr>
+    <tr><td>(+) Entradas</td><td class="num positivo">{{ resumo.receitas|moeda }}</td></tr>
+    <tr><td>(−) Saídas</td><td class="num negativo">{{ resumo.despesas|moeda }}</td></tr>
+    <tr class="total"><td>Saldo no fim do período</td><td class="num">{{ saldo_final|moeda }}</td></tr>
+    <tr><td>Saídas com comprovante</td><td class="num">{{ "—" if resumo.pct_comprovado is none else resumo.pct_comprovado ~ "%" }}</td></tr>
+  </table>
+
+  <div class="colunas">
+    <section>
+      <h2>Entradas por categoria</h2>
+      <table>
+        {% for cat, valor in receitas_por_categoria.items() %}
+          <tr><td>{{ cat }}</td><td class="num">{{ valor|moeda }}</td></tr>
+        {% else %}
+          <tr><td class="vazio">Nenhuma entrada no período.</td></tr>
+        {% endfor %}
+      </table>
+    </section>
+    <section>
+      <h2>Saídas por categoria</h2>
+      <table>
+        {% for cat, valor in resumo.por_categoria.items() %}
+          <tr><td>{{ cat }}</td><td class="num">{{ valor|moeda }}</td></tr>
+        {% else %}
+          <tr><td class="vazio">Nenhuma saída no período.</td></tr>
+        {% endfor %}
+      </table>
+    </section>
+  </div>
+
+  <h2>Movimentações</h2>
+  {% if lancamentos %}
+  <table>
+    <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="num">Valor</th><th>Comprovante</th></tr></thead>
+    <tbody>
+    {% for l in lancamentos %}
+      <tr>
+        <td>{{ l.data.strftime('%d/%m/%Y') }}</td>
+        <td>{{ l.descricao }}</td>
+        <td>{{ l.categoria }}</td>
+        <td class="num {{ 'positivo' if l.tipo == 'receita' else 'negativo' }}">{{ l.valor_assinado|moeda }}</td>
+        <td>{% if l.comprovante %}sim{% elif l.tipo == 'despesa' %}não{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="vazio">Nenhuma movimentação no período escolhido.</p>
+  {% endif %}
+
+  <div class="assinaturas">
+    <div><span></span>Responsável pela organização</div>
+    <div><span></span>Responsável financeiro / conselho fiscal</div>
+  </div>
+  <p class="discreto">Gerado pelo Contas Abertas em {{ hoje.strftime('%d/%m/%Y') }}.
+    Os comprovantes ficam arquivados pela organização.</p>
+</article>
+{% endblock %}

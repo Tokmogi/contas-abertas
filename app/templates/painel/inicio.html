@@ -2,40 +2,90 @@
 {% block titulo %}Painel · {{ current_user.organizacao.nome }}{% endblock %}
 {% block conteudo %}
 <div class="cabecalho">
-  <h1>{{ current_user.organizacao.nome }}</h1>
   <div>
+    <h1>{{ current_user.organizacao.nome }}</h1>
+    <p class="discreto subtitulo">Olá, {{ current_user.nome.split()[0] }}!
+      {% if mes %}Mostrando {{ mes|mes }}.{% elif tem_lancamentos %}Mostrando todo o período.{% endif %}</p>
+  </div>
+  <div class="acoes-topo">
     <a class="botao" href="{{ url_for('painel.formulario') }}">+ Novo lançamento</a>
-    <a class="botao secundario" href="{{ url_for('painel.exportar_csv') }}">Exportar planilha</a>
+    <a class="botao secundario" href="{{ url_for('painel.relatorio') }}">Relatório (PDF)</a>
+    <a class="botao secundario" href="{{ url_for('painel.exportar_csv') }}">Planilha</a>
   </div>
 </div>
 
+{% if not tem_lancamentos %}
+<section class="boas-vindas">
+  <h2>Vamos começar? 👋</h2>
+  <ol>
+    <li><a href="{{ url_for('painel.formulario', tipo='receita') }}">Registre uma doação</a> que a organização recebeu.</li>
+    <li><a href="{{ url_for('painel.formulario') }}">Registre um gasto</a> e tire uma foto da nota fiscal.</li>
+    <li>Compartilhe a <a href="{{ url_for('publico.transparencia', slug=current_user.organizacao.slug) }}">página pública</a> com seus doadores.</li>
+    <li>Chame mais gente para ajudar na página <a href="{{ url_for('painel.equipe') }}">Equipe</a>.</li>
+  </ol>
+</section>
+{% else %}
+
+{% if pendentes %}
+<p class="aviso aviso-alerta">
+  {{ pendentes }} {{ 'saída está' if pendentes == 1 else 'saídas estão' }} sem comprovante.
+  <a href="{{ url_for('painel.inicio', tipo='pendente') }}">Ver e anexar</a>
+</p>
+{% endif %}
+
 {% include "_resumo.html" %}
 
-<h2>Lançamentos</h2>
+<div class="cabecalho">
+  <h2>Lançamentos</h2>
+  <form method="get" class="filtros" aria-label="Filtrar lançamentos">
+    <select name="mes" aria-label="Mês" onchange="this.form.submit()">
+      <option value="">Todos os meses</option>
+      {% for m in meses %}<option value="{{ m }}" {{ 'selected' if m == mes }}>{{ m|mes|capitalize }}</option>{% endfor %}
+    </select>
+    <select name="tipo" aria-label="Tipo" onchange="this.form.submit()">
+      <option value="">Entradas e saídas</option>
+      {% for valor, texto in filtros_tipo.items() %}<option value="{{ valor }}" {{ 'selected' if valor == tipo }}>{{ texto }}</option>{% endfor %}
+    </select>
+    <noscript><button class="botao secundario">Filtrar</button></noscript>
+  </form>
+</div>
+
 {% if lancamentos %}
-<div class="tabela-rolagem">
-<table>
-  <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="num">Valor</th><th>Comprovante</th><th></th></tr></thead>
+<table class="lista-lancamentos">
+  <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="num">Valor</th><th>Comprovante</th><th><span class="oculto">Ações</span></th></tr></thead>
   <tbody>
   {% for l in lancamentos %}
     <tr>
-      <td>{{ l.data.strftime('%d/%m/%Y') }}</td>
-      <td>{{ l.descricao }}</td>
-      <td>{{ l.categoria }}</td>
-      <td class="num {{ 'positivo' if l.tipo == 'receita' else 'negativo' }}">{{ l.valor_assinado|moeda }}</td>
-      <td>{% if l.comprovante %}<a href="{{ url_for('painel.comprovante', lanc_id=l.id) }}" target="_blank">ver</a>{% elif l.tipo == 'despesa' %}<span class="pendente">pendente</span>{% endif %}</td>
+      <td class="col-data">{{ l.data.strftime('%d/%m/%Y') }}</td>
+      <td class="col-descricao">{{ l.descricao }}</td>
+      <td class="col-categoria">{{ l.categoria }}</td>
+      <td class="num col-valor {{ 'positivo' if l.tipo == 'receita' else 'negativo' }}">{{ l.valor_assinado|moeda }}</td>
+      <td class="col-comprovante">
+        {% if l.comprovante %}<a href="{{ url_for('painel.comprovante', lanc_id=l.id) }}" target="_blank" rel="noopener">📎 ver</a>
+        {% elif l.tipo == 'despesa' %}<a class="pendente" href="{{ url_for('painel.formulario', lanc_id=l.id) }}">⚠ anexar</a>{% endif %}
+      </td>
       <td class="acoes">
         <a href="{{ url_for('painel.formulario', lanc_id=l.id) }}">editar</a>
-        <form method="post" action="{{ url_for('painel.excluir', lanc_id=l.id) }}" onsubmit="return confirm('Excluir este lançamento?')">
-          <button class="link">excluir</button>
+        <form method="post" action="{{ url_for('painel.excluir', lanc_id=l.id) }}" data-confirmar="Excluir “{{ l.descricao }}” ({{ l.valor|moeda }})? Isso não pode ser desfeito.">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="link perigo">excluir</button>
         </form>
       </td>
     </tr>
   {% endfor %}
   </tbody>
 </table>
-</div>
+<p class="discreto">{{ lancamentos|length }} lançamento{{ 's' if lancamentos|length != 1 }}.</p>
 {% else %}
-<p class="vazio">Nenhum lançamento ainda. Comece registrando uma doação recebida ou um gasto.</p>
+<p class="vazio">Nenhum lançamento com esse filtro. <a href="{{ url_for('painel.inicio') }}">Ver todos</a></p>
 {% endif %}
+{% endif %}
+
+<a class="botao flutuante" href="{{ url_for('painel.formulario') }}" aria-label="Novo lançamento">+</a>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll("form[data-confirmar]").forEach(f =>
+    f.addEventListener("submit", e => { if (!confirm(f.dataset.confirmar)) e.preventDefault(); }));
+</script>
 {% endblock %}

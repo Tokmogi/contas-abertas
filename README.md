@@ -24,9 +24,12 @@ voluntários e orçamento curto. Essas organizações costumam:
 |---|---|
 | Registro de entradas e saídas com categorias simples | Qualquer voluntário consegue usar, sem saber contabilidade |
 | Foto ou PDF do comprovante (até pelo celular) | Organiza os documentos num só lugar |
-| Painel com saldo, gráficos e % de gastos comprovados | Gestão do dia a dia |
-| **Página pública de transparência** | Doadores e comunidade veem tudo, com gráficos |
+| Painel com saldo, gráficos, % de gastos comprovados e filtro por mês | Gestão do dia a dia |
+| Aviso de saídas sem comprovante, com atalho para anexar | Nenhuma nota fica esquecida |
+| **Página pública de transparência** | Doadores e comunidade veem tudo, com gráficos e botão de compartilhar no WhatsApp |
 | Exportação da planilha de prestação de contas | Facilita editais e convênios |
+| Relatório de prestação de contas por período (imprimir ou salvar em PDF) | Anexar em editais, com saldo inicial, final e linhas de assinatura |
+| Convite de voluntários por link (WhatsApp) | Dividir o trabalho com a equipe |
 | Comprovantes não publicados | Proteção de dados pessoais (LGPD) |
 
 ## Quem é beneficiado
@@ -67,9 +70,10 @@ Com Docker: `docker build -t contas-abertas . && docker run -p 8000:8000 contas-
 ```
 app/
   __init__.py     criação da aplicação
-  models.py       Organizacao, Usuario, Lancamento
-  auth.py         cadastro, login e logout
-  painel.py       área da organização (lançamentos, comprovantes, exportação)
+  models.py       Organizacao, Usuario, Lancamento, Convite
+  auth.py         cadastro, login, logout e aceite de convite
+  painel.py       área da organização (lançamentos, comprovantes, equipe, relatório, exportação)
+  seguranca.py    proteção CSRF dos formulários
   publico.py      página inicial e portal de transparência
   utils.py        formatação de moeda e cálculo dos resumos
   templates/      telas (HTML)

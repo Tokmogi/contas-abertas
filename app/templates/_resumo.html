@@ -1,38 +1,69 @@
 <section class="cartoes">
   <div class="cartao"><span>Entradas</span><strong class="positivo">{{ resumo.receitas|moeda }}</strong></div>
   <div class="cartao"><span>Saídas</span><strong class="negativo">{{ resumo.despesas|moeda }}</strong></div>
-  <div class="cartao"><span>Saldo</span><strong>{{ resumo.saldo|moeda }}</strong></div>
-  <div class="cartao"><span>Saídas com comprovante</span><strong>{{ resumo.pct_comprovado }}%</strong></div>
+  <div class="cartao"><span>Saldo</span><strong class="{{ 'negativo' if resumo.saldo < 0 }}">{{ resumo.saldo|moeda }}</strong></div>
+  <div class="cartao" title="Quanto das saídas tem nota fiscal ou recibo guardado">
+    <span>Saídas com comprovante</span>
+    {% if resumo.pct_comprovado is none %}<strong>—</strong>
+    {% else %}<strong>{{ resumo.pct_comprovado }}%</strong>
+    <div class="barra" role="presentation"><div style="width: {{ resumo.pct_comprovado }}%"></div></div>{% endif %}
+  </div>
 </section>
 
-{% if resumo.por_categoria %}
+{% if resumo.por_mes %}
 <section class="graficos">
+  {% if resumo.por_categoria %}
   <div class="painel-grafico">
     <h3>Para onde foi o dinheiro</h3>
-    <canvas id="grafico-categorias"></canvas>
+    <canvas id="grafico-categorias" role="img" aria-label="Gráfico das saídas por categoria"></canvas>
+    <ul class="legenda-texto">
+      {% for cat, valor in resumo.por_categoria.items() %}
+        <li><span>{{ cat }}</span><strong>{{ valor|moeda }}</strong>
+          <small>{{ (100 * valor / resumo.despesas)|round|int }}%</small></li>
+      {% endfor %}
+    </ul>
   </div>
+  {% endif %}
   <div class="painel-grafico">
     <h3>Entradas e saídas por mês</h3>
-    <canvas id="grafico-meses"></canvas>
+    <canvas id="grafico-meses" role="img" aria-label="Gráfico de entradas e saídas por mês"></canvas>
   </div>
 </section>
 <script src="{{ url_for('static', filename='chart.umd.min.js') }}"></script>
 <script>
-  const categorias = {{ resumo.por_categoria|tojson }};
-  const meses = {{ resumo.por_mes|tojson }};
-  new Chart(document.getElementById("grafico-categorias"), {
-    type: "doughnut",
-    data: { labels: Object.keys(categorias), datasets: [{ data: Object.values(categorias).map(Number) }] },
-  });
-  new Chart(document.getElementById("grafico-meses"), {
-    type: "bar",
-    data: {
-      labels: Object.keys(meses),
-      datasets: [
-        { label: "Entradas", data: Object.values(meses).map(m => Number(m.receita)), backgroundColor: "#2e9e6b" },
-        { label: "Saídas", data: Object.values(meses).map(m => Number(m.despesa)), backgroundColor: "#d9534f" },
-      ],
-    },
-  });
+  (() => {
+    // listas (e não objetos) para manter a ordem: o tojson ordena chaves alfabeticamente
+    const categorias = {{ resumo.por_categoria.items()|list|tojson }};
+    const meses = {{ resumo.por_mes_rotulos.items()|list|tojson }};
+    const brl = v => Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const escuro = matchMedia("(prefers-color-scheme: dark)").matches;
+    Chart.defaults.color = escuro ? "#c9d4cf" : "#44524d";
+    Chart.defaults.borderColor = escuro ? "#2a3632" : "#e5ebe8";
+    Chart.defaults.font.family = "system-ui, sans-serif";
+    const cores = ["#1f7a5a", "#3d8bd9", "#e0a030", "#c9423e", "#7b5cc4", "#2fa4a9", "#8a9a94"];
+    const elCat = document.getElementById("grafico-categorias");
+    if (elCat) new Chart(elCat, {
+      type: "doughnut",
+      data: { labels: categorias.map(c => c[0]),
+              datasets: [{ data: categorias.map(c => Number(c[1])), backgroundColor: cores, borderWidth: 2,
+                           borderColor: escuro ? "#1a2421" : "#fff" }] },
+      options: { plugins: { legend: { display: false },
+                 tooltip: { callbacks: { label: c => ` ${c.label}: ${brl(c.raw)}` } } } },
+    });
+    new Chart(document.getElementById("grafico-meses"), {
+      type: "bar",
+      data: {
+        labels: meses.map(m => m[0]),
+        datasets: [
+          { label: "Entradas", data: meses.map(m => Number(m[1].receita)), backgroundColor: "#2e9e6b", borderRadius: 4 },
+          { label: "Saídas", data: meses.map(m => Number(m[1].despesa)), backgroundColor: "#d9534f", borderRadius: 4 },
+        ],
+      },
+      options: {
+        scales: { y: { beginAtZero: true, ticks: { callback: v => brl(v).replace(",00", "") } } },
+        plugins: { tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${brl(c.raw)}` } } },
+      },
+    });
+  })();
 </script>
 {% endif %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block titulo %}Equipe · {{ current_user.organizacao.nome }}{% endblock %}
+{% block conteudo %}
+<div class="cabecalho">
+  <h1>Equipe</h1>
+  <form method="post" action="{{ url_for('painel.convidar') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="botao">+ Convidar voluntário</button>
+  </form>
+</div>
+<p class="discreto">Todos da equipe podem registrar entradas, saídas e comprovantes.</p>
+
+<ul class="lista-orgs">
+  {% for m in membros %}
+    <li><strong>{{ m.nome }}</strong>{% if m.id == current_user.id %} (você){% endif %}<span>{{ m.email }}</span></li>
+  {% endfor %}
+</ul>
+
+{% if convites %}
+<h2>Convites aguardando resposta</h2>
+<p class="discreto">Cada link serve para uma pessoa e vale por 7 dias.</p>
+<ul class="lista-orgs">
+  {% for c in convites %}
+    {% set link = url_for('auth.convite', token=c.token, _external=True) %}
+    <li class="convite">
+      <input class="link-convite" value="{{ link }}" readonly onclick="this.select()">
+      <span>Vale até {{ c.expira_em.strftime('%d/%m/%Y') }}</span>
+      <div class="acoes">
+        <button type="button" class="link copiar" data-copiar="{{ link }}">copiar link</button>
+        <a href="https://wa.me/?text={{ ('Você foi convidado(a) para a equipe de ' ~ current_user.organizacao.nome ~ ' no Contas Abertas: ' ~ link)|urlencode }}" target="_blank" rel="noopener">enviar por WhatsApp</a>
+        <form method="post" action="{{ url_for('painel.cancelar_convite', conv_id=c.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="link perigo">cancelar</button>
+        </form>
+      </div>
+    </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

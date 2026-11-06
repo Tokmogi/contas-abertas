@@ -1,8 +1,9 @@
 """Portal público de transparência: qualquer pessoa vê para onde foi o dinheiro."""
 from flask import Blueprint, abort, render_template
+from flask_login import current_user
 
 from .models import Lancamento, Organizacao
-from .utils import resumo
+from .utils import no_fuso, resumo
 
 bp = Blueprint("publico", __name__)
 
@@ -15,8 +16,10 @@ def inicio():
 
 @bp.route("/transparencia/<slug>")
 def transparencia(slug: str):
-    org = Organizacao.query.filter_by(slug=slug, publico=True).first()
-    if org is None:
+    org = Organizacao.query.filter_by(slug=slug).first()
+    # Página privada: só a própria equipe vê (para conferir antes de publicar).
+    da_equipe = current_user.is_authenticated and org is not None and current_user.organizacao_id == org.id
+    if org is None or not (org.publico or da_equipe):
         abort(404)
     lancamentos = (
         Lancamento.query.filter_by(organizacao_id=org.id)
@@ -26,5 +29,6 @@ def transparencia(slug: str):
     # Valores e categorias são públicos; os arquivos de comprovante, não
     # (podem conter dados pessoais — LGPD). Mostramos só se existe comprovante.
     return render_template(
-        "publico/transparencia.html", org=org, lancamentos=lancamentos, resumo=resumo(lancamentos)
+        "publico/transparencia.html", org=org, lancamentos=lancamentos, resumo=resumo(lancamentos),
+        atualizado_em=no_fuso(max(l.criado_em for l in lancamentos)) if lancamentos else None,
     )

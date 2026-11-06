@@ -3,6 +3,7 @@
 Uso: python dados_exemplo.py
 Login: demo@contasabertas.org / demonstracao
 """
+import os
 from datetime import date
 from decimal import Decimal
 
@@ -22,8 +23,21 @@ MOVIMENTOS = [
     ("despesa", "2026-10-18", "Transporte para passeio educativo", "Transporte", "600.00"),
 ]
 
+# PDF mínimo usado como comprovante de exemplo (sem ele, o link "ver" daria erro)
+PDF_EXEMPLO = (
+    b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+    b"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+    b"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 120]/Contents 4 0 R"
+    b"/Resources<</Font<</F1<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>>>>>>>endobj\n"
+    b"4 0 obj<</Length 52>>stream\nBT /F1 16 Tf 30 60 Td (Comprovante de exemplo) Tj ET\nendstream endobj\n"
+    b"trailer<</Root 1 0 R>>\n%%EOF\n"
+)
+
 app = criar_app()
 with app.app_context():
+    with open(os.path.join(app.config["UPLOAD_FOLDER"], "exemplo.pdf"), "wb") as arquivo:
+        arquivo.write(PDF_EXEMPLO)
+
     if Organizacao.query.filter_by(slug="instituto-mao-amiga").first():
         print("Dados de exemplo já existem.")
     else:

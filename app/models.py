@@ -1,4 +1,5 @@
-from datetime import date, datetime, timezone
+import secrets
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
 from flask_login import UserMixin
@@ -6,6 +7,7 @@ from sqlalchemy import Numeric
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import db, login_manager
+from .utils import hoje
 
 CATEGORIAS_RECEITA = [
     "Doação de pessoa física",
@@ -61,7 +63,7 @@ class Lancamento(db.Model):
         db.Integer, db.ForeignKey("organizacao.id"), nullable=False, index=True
     )
     tipo = db.Column(db.String(7), nullable=False)  # "receita" ou "despesa"
-    data = db.Column(db.Date, nullable=False, default=date.today)
+    data = db.Column(db.Date, nullable=False, default=hoje)
     descricao = db.Column(db.String(200), nullable=False)
     categoria = db.Column(db.String(60), nullable=False)
     valor = db.Column(Numeric(12, 2), nullable=False)
@@ -73,6 +75,36 @@ class Lancamento(db.Model):
     @property
     def valor_assinado(self) -> Decimal:
         return self.valor if self.tipo == "receita" else -self.valor
+
+
+class Convite(db.Model):
+    """Link para um voluntário entrar na equipe de uma organização."""
+
+    VALIDADE = timedelta(days=7)
+
+    id = db.Column(db.Integer, primary_key=True)
+    organizacao_id = db.Column(db.Integer, db.ForeignKey("organizacao.id"), nullable=False, index=True)
+    token = db.Column(
+        db.String(64), unique=True, nullable=False, index=True,
+        default=lambda: secrets.token_urlsafe(24),
+    )
+    criado_por_id = db.Column(db.Integer, db.ForeignKey("usuario.id"))
+    criado_em = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    usado_em = db.Column(db.DateTime)
+
+    organizacao = db.relationship("Organizacao")
+    criado_por = db.relationship("Usuario")
+
+    @property
+    def expira_em(self) -> datetime:
+        criado = self.criado_em
+        if criado.tzinfo is None:  # SQLite devolve datas sem fuso
+            criado = criado.replace(tzinfo=timezone.utc)
+        return criado + self.VALIDADE
+
+    @property
+    def valido(self) -> bool:
+        return self.usado_em is None and datetime.now(timezone.utc) < self.expira_em
 
 
 @login_manager.user_loader

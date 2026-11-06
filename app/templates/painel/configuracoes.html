@@ -1,13 +1,24 @@
 {% extends "base.html" %}
 {% block titulo %}Configurações{% endblock %}
 {% block conteudo %}
+{% set link = url_for('publico.transparencia', slug=org.slug, _external=True) %}
 <form method="post" class="formulario">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <h1>Configurações da organização</h1>
-  <label>Nome<input name="nome" value="{{ org.nome }}" required></label>
-  <label>Causa<input name="causa" value="{{ org.causa or '' }}"></label>
-  <label>CNPJ<input name="cnpj" value="{{ org.cnpj or '' }}"></label>
-  <label class="caixa"><input type="checkbox" name="publico" {{ 'checked' if org.publico }}> Página de transparência pública</label>
-  <p>Endereço público: <a href="{{ url_for('publico.transparencia', slug=org.slug, _external=True) }}">{{ url_for('publico.transparencia', slug=org.slug, _external=True) }}</a></p>
+  <label>Nome<input name="nome" value="{{ org.nome }}" maxlength="120" required></label>
+  <label>Causa <small class="discreto">(aparece na página pública)</small><input name="causa" value="{{ org.causa or '' }}" maxlength="200" placeholder="Ex.: Reforço escolar para crianças do bairro"></label>
+  <label>CNPJ <small class="discreto">(se tiver)</small><input name="cnpj" value="{{ org.cnpj or '' }}" inputmode="numeric" maxlength="18" placeholder="00.000.000/0000-00"></label>
+
+  <fieldset class="publicacao">
+    <legend>Página de transparência</legend>
+    <label class="caixa"><input type="checkbox" name="publico" {{ 'checked' if org.publico }}> Deixar pública para doadores e comunidade</label>
+    <p class="discreto">Os comprovantes nunca são publicados, só os valores e categorias.</p>
+    <input class="link-convite" value="{{ link }}" readonly onclick="this.select()" aria-label="Endereço da página pública">
+    <div class="acoes">
+      <button type="button" class="link copiar" data-copiar="{{ link }}">copiar link</button>
+      <a href="{{ link }}" target="_blank" rel="noopener">abrir página</a>
+    </div>
+  </fieldset>
   <button class="botao">Salvar</button>
 </form>
 {% endblock %}

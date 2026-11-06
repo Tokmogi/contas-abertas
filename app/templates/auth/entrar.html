@@ -2,9 +2,11 @@
 {% block titulo %}Entrar · Contas Abertas{% endblock %}
 {% block conteudo %}
 <form method="post" class="formulario">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <h1>Entrar</h1>
-  <label>E-mail<input type="email" name="email" required></label>
-  <label>Senha<input type="password" name="senha" required></label>
+  <label>E-mail<input type="email" name="email" value="{{ email }}" autocomplete="email" required {{ 'autofocus' if not email }}></label>
+  <label>Senha<input type="password" name="senha" autocomplete="current-password" required {{ 'autofocus' if email }}></label>
+  <label class="caixa"><input type="checkbox" name="lembrar"> Continuar conectado neste aparelho</label>
   <button class="botao">Entrar</button>
   <p>Ainda não tem conta? <a href="{{ url_for('auth.cadastro') }}">Cadastre sua organização</a>.</p>
 </form>

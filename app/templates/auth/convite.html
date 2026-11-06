@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titulo %}Convite · {{ conv.organizacao.nome }}{% endblock %}
+{% block conteudo %}
+<form method="post" class="formulario">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <h1>Entrar na equipe de {{ conv.organizacao.nome }}</h1>
+  <p>{% if conv.criado_por %}{{ conv.criado_por.nome }} convidou você{% else %}Você foi convidado(a){% endif %}
+    para ajudar a registrar as contas da organização. Crie seu acesso:</p>
+  <label>Seu nome *<input name="nome" value="{{ form.nome }}" maxlength="120" autocomplete="name" required></label>
+  <label>E-mail *<input type="email" name="email" value="{{ form.email }}" autocomplete="email" required></label>
+  <label>Senha (mínimo 8 caracteres) *<input type="password" name="senha" minlength="8" autocomplete="new-password" required></label>
+  <button class="botao">Entrar na equipe</button>
+</form>
+{% endblock %}

@@ -1,38 +1,87 @@
 {% extends "base.html" %}
 {% block titulo %}{{ 'Editar' if lanc else 'Novo' }} lançamento{% endblock %}
-{% set tipo = form.tipo or (lanc.tipo if lanc else 'despesa') %}
 {% block conteudo %}
 <form method="post" enctype="multipart/form-data" class="formulario">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <h1>{{ 'Editar' if lanc else 'Novo' }} lançamento</h1>
 
   <fieldset class="tipo">
-    <label><input type="radio" name="tipo" value="receita" {{ 'checked' if tipo == 'receita' }}> Entrada (dinheiro que chegou)</label>
-    <label><input type="radio" name="tipo" value="despesa" {{ 'checked' if tipo == 'despesa' }}> Saída (dinheiro gasto)</label>
+    <legend>O que aconteceu?</legend>
+    <label class="opcao-tipo receita"><input type="radio" name="tipo" value="receita" {{ 'checked' if tipo == 'receita' }}>
+      <span>⬇ Entrada<small>dinheiro que chegou</small></span></label>
+    <label class="opcao-tipo despesa"><input type="radio" name="tipo" value="despesa" {{ 'checked' if tipo == 'despesa' }}>
+      <span>⬆ Saída<small>dinheiro gasto</small></span></label>
   </fieldset>
 
-  <label>Categoria
-    <select name="categoria" id="categoria" data-atual="{{ form.categoria or (lanc.categoria if lanc else '') }}"></select>
+  <label>Valor
+    <span class="campo-moeda"><span aria-hidden="true">R$</span>
+      <input name="valor" inputmode="decimal" autocomplete="off"
+        value="{{ v.valor }}"
+        placeholder="0,00" required {{ 'autofocus' if not lanc }}></span>
   </label>
-  <label>Descrição<input name="descricao" value="{{ form.descricao or (lanc.descricao if lanc else '') }}" placeholder="Ex.: Cesta básica para 10 famílias" required></label>
-  <label>Valor (R$)<input name="valor" inputmode="decimal" value="{{ form.valor or (('%.2f'|format(lanc.valor)).replace('.', ',') if lanc else '') }}" placeholder="150,00" required></label>
-  <label>Data<input type="date" name="data" value="{{ form.data or (lanc.data.isoformat() if lanc else '') }}"></label>
-  <label>Comprovante (PDF ou foto da nota)<input type="file" name="comprovante" accept=".pdf,image/*" capture="environment"></label>
-  {% if lanc and lanc.comprovante %}<p>Já existe um comprovante. Envie outro só se quiser substituir.</p>{% endif %}
+  <label>Descrição<input name="descricao" maxlength="200" value="{{ v.descricao }}" placeholder="Ex.: Cesta básica para 10 famílias" required></label>
+  <label>Categoria
+    <select name="categoria" id="categoria" data-atual="{{ v.categoria }}">
+      {# preenchido pelo script; sem JavaScript mostra todas #}
+      <optgroup label="Entradas">{% for c in receitas %}<option>{{ c }}</option>{% endfor %}</optgroup>
+      <optgroup label="Saídas">{% for c in despesas %}<option>{{ c }}</option>{% endfor %}</optgroup>
+    </select>
+  </label>
+  <label>Data<input type="date" name="data" id="data" value="{{ v.data }}"></label>
 
-  <button class="botao">Salvar</button>
-  <a href="{{ url_for('painel.inicio') }}">Cancelar</a>
+  <div class="campo-arquivo" id="bloco-comprovante">
+    <span class="rotulo">Comprovante <small>(foto da nota ou PDF, até 5 MB)</small></span>
+    {% if lanc and lanc.comprovante %}
+      <p class="comprovante-atual">📎 <a href="{{ url_for('painel.comprovante', lanc_id=lanc.id) }}" target="_blank" rel="noopener">Ver comprovante atual</a>
+        <label class="caixa"><input type="checkbox" name="remover_comprovante"> remover</label></p>
+    {% endif %}
+    <label class="botao secundario escolher-arquivo">
+      📷 {{ 'Trocar comprovante' if lanc and lanc.comprovante else 'Tirar foto ou escolher arquivo' }}
+      <input type="file" name="comprovante" id="comprovante" accept=".pdf,image/png,image/jpeg,image/webp">
+    </label>
+    <span id="nome-arquivo" class="discreto"></span>
+  </div>
+
+  <div class="botoes-form">
+    <button class="botao">Salvar</button>
+    {% if not lanc %}<button class="botao secundario" name="depois" value="outro">Salvar e lançar outro</button>{% endif %}
+    <a href="{{ url_for('painel.inicio') }}">Cancelar</a>
+  </div>
 </form>
 {% endblock %}
 {% block scripts %}
 <script>
   const opcoes = { receita: {{ receitas|tojson }}, despesa: {{ despesas|tojson }} };
   const select = document.getElementById("categoria");
+  let atual = select.dataset.atual;
   function preencher() {
     const tipo = document.querySelector("input[name=tipo]:checked").value;
-    const atual = select.value || select.dataset.atual;
-    select.innerHTML = opcoes[tipo].map(c => `<option ${c === atual ? "selected" : ""}>${c}</option>`).join("");
+    if (!opcoes[tipo].includes(atual)) atual = opcoes[tipo][0];
+    select.replaceChildren(...opcoes[tipo].map(c => new Option(c, c, false, c === atual)));
+    document.getElementById("bloco-comprovante").hidden = tipo === "receita" && !{{ 'true' if lanc and lanc.comprovante else 'false' }};
   }
+  select.addEventListener("change", () => { atual = select.value; });
   document.querySelectorAll("input[name=tipo]").forEach(r => r.addEventListener("change", preencher));
   preencher();
+
+  // Data de hoje no fuso de quem está usando
+  const data = document.getElementById("data");
+  if (!data.value) {
+    const hoje = new Date();
+    data.value = new Date(hoje.getTime() - hoje.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  }
+
+  const arquivo = document.getElementById("comprovante");
+  arquivo.addEventListener("change", () => {
+    const f = arquivo.files[0];
+    const aviso = document.getElementById("nome-arquivo");
+    if (!f) { aviso.textContent = ""; return; }
+    if (f.size > 5 * 1024 * 1024) {
+      aviso.textContent = "⚠ Arquivo maior que 5 MB. Escolha uma foto menor.";
+      arquivo.value = "";
+    } else {
+      aviso.textContent = "✔ " + f.name;
+    }
+  });
 </script>
 {% endblock %}

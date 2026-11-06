@@ -3,35 +3,60 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1f7a5a">
   <title>{% block titulo %}Contas Abertas{% endblock %}</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔓</text></svg>">
   <link rel="stylesheet" href="{{ url_for('static', filename='estilo.css') }}">
 </head>
 <body>
-  <header class="topo">
-    <a class="marca" href="{{ url_for('publico.inicio') }}">🔓 Contas Abertas</a>
-    <nav>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+  {% set atual = request.endpoint or '' %}
+  {% macro item(endpoint, texto) -%}
+    <a href="{{ url_for(endpoint, **kwargs) }}" {% if atual == endpoint %}class="ativo" aria-current="page"{% endif %}>{{ texto }}</a>
+  {%- endmacro %}
+  <header class="topo nao-imprimir">
+    <a class="marca" href="{{ url_for('painel.inicio' if current_user.is_authenticated else 'publico.inicio') }}">🔓 Contas Abertas</a>
+    <button class="menu-botao" type="button" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu">☰</button>
+    <nav id="menu">
       {% if current_user.is_authenticated %}
-        <a href="{{ url_for('painel.inicio') }}">Painel</a>
-        <a href="{{ url_for('publico.transparencia', slug=current_user.organizacao.slug) }}">Página pública</a>
-        <a href="{{ url_for('painel.configuracoes') }}">Configurações</a>
+        {{ item('painel.inicio', 'Painel') }}
+        {{ item('painel.relatorio', 'Relatório') }}
+        {{ item('painel.equipe', 'Equipe') }}
+        {{ item('publico.transparencia', 'Página pública', slug=current_user.organizacao.slug) }}
+        {{ item('painel.configuracoes', 'Configurações') }}
         <a href="{{ url_for('auth.sair') }}">Sair</a>
       {% else %}
-        <a href="{{ url_for('auth.entrar') }}">Entrar</a>
+        {{ item('auth.entrar', 'Entrar') }}
         <a class="botao" href="{{ url_for('auth.cadastro') }}">Cadastrar organização</a>
       {% endif %}
     </nav>
   </header>
 
-  <main class="conteudo">
+  <main class="conteudo" id="conteudo">
     {% for categoria, mensagem in get_flashed_messages(with_categories=true) %}
-      <p class="aviso aviso-{{ categoria }}">{{ mensagem }}</p>
+      <p class="aviso aviso-{{ categoria }}" role="{{ 'alert' if categoria == 'erro' else 'status' }}">{{ mensagem }}</p>
     {% endfor %}
     {% block conteudo %}{% endblock %}
   </main>
 
-  <footer class="rodape">
+  <footer class="rodape nao-imprimir">
     Projeto social de código aberto · Transparência para quem faz muito com pouco
   </footer>
+  <script>
+    const menuBotao = document.querySelector(".menu-botao");
+    menuBotao.addEventListener("click", () => {
+      const aberto = document.body.classList.toggle("menu-aberto");
+      menuBotao.setAttribute("aria-expanded", aberto);
+      menuBotao.textContent = aberto ? "✕" : "☰";
+    });
+    // Botões "copiar link" em qualquer tela
+    document.querySelectorAll("[data-copiar]").forEach(b => b.addEventListener("click", () => {
+      navigator.clipboard.writeText(b.dataset.copiar).then(() => {
+        const texto = b.textContent; b.textContent = "Copiado!";
+        setTimeout(() => { b.textContent = texto; }, 2000);
+      });
+    }));
+  </script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

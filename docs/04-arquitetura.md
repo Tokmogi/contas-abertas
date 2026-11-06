@@ -18,6 +18,7 @@ flowchart LR
 erDiagram
     ORGANIZACAO ||--o{ USUARIO : tem
     ORGANIZACAO ||--o{ LANCAMENTO : registra
+    ORGANIZACAO ||--o{ CONVITE : envia
     ORGANIZACAO {
         string nome
         string slug "endereço público"
@@ -38,6 +39,10 @@ erDiagram
         decimal valor
         string comprovante
     }
+    CONVITE {
+        string token "link de uso único, vale 7 dias"
+        datetime usado_em
+    }
 ```
 
 ## Decisões
@@ -50,3 +55,6 @@ erDiagram
 | Valores em `Decimal` | Evita erros de arredondamento com dinheiro |
 | Comprovantes fora da página pública | Podem conter CPF, endereço etc. (LGPD) |
 | Categorias fixas e simples | Voluntários não precisam saber contabilidade |
+| Convite por link, sem e-mail | Não exige servidor de e-mail; voluntários já usam WhatsApp |
+| Relatório em HTML com "Imprimir / salvar em PDF" | Sem biblioteca extra; o navegador gera o PDF |
+| CSRF próprio (token na sessão) | Protege formulários sem adicionar dependência |
