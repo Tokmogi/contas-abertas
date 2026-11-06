@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titulo %}Painel · {{ current_user.organizacao.nome }}{% endblock %}
+{% block conteudo %}
+<div class="cabecalho">
+  <h1>{{ current_user.organizacao.nome }}</h1>
+  <div>
+    <a class="botao" href="{{ url_for('painel.formulario') }}">+ Novo lançamento</a>
+    <a class="botao secundario" href="{{ url_for('painel.exportar_csv') }}">Exportar planilha</a>
+  </div>
+</div>
+
+{% include "_resumo.html" %}
+
+<h2>Lançamentos</h2>
+{% if lancamentos %}
+<div class="tabela-rolagem">
+<table>
+  <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="num">Valor</th><th>Comprovante</th><th></th></tr></thead>
+  <tbody>
+  {% for l in lancamentos %}
+    <tr>
+      <td>{{ l.data.strftime('%d/%m/%Y') }}</td>
+      <td>{{ l.descricao }}</td>
+      <td>{{ l.categoria }}</td>
+      <td class="num {{ 'positivo' if l.tipo == 'receita' else 'negativo' }}">{{ l.valor_assinado|moeda }}</td>
+      <td>{% if l.comprovante %}<a href="{{ url_for('painel.comprovante', lanc_id=l.id) }}" target="_blank">ver</a>{% elif l.tipo == 'despesa' %}<span class="pendente">pendente</span>{% endif %}</td>
+      <td class="acoes">
+        <a href="{{ url_for('painel.formulario', lanc_id=l.id) }}">editar</a>
+        <form method="post" action="{{ url_for('painel.excluir', lanc_id=l.id) }}" onsubmit="return confirm('Excluir este lançamento?')">
+          <button class="link">excluir</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="vazio">Nenhum lançamento ainda. Comece registrando uma doação recebida ou um gasto.</p>
+{% endif %}
+{% endblock %}

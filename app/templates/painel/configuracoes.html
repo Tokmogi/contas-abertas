@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block titulo %}Configurações{% endblock %}
+{% block conteudo %}
+<form method="post" class="formulario">
+  <h1>Configurações da organização</h1>
+  <label>Nome<input name="nome" value="{{ org.nome }}" required></label>
+  <label>Causa<input name="causa" value="{{ org.causa or '' }}"></label>
+  <label>CNPJ<input name="cnpj" value="{{ org.cnpj or '' }}"></label>
+  <label class="caixa"><input type="checkbox" name="publico" {{ 'checked' if org.publico }}> Página de transparência pública</label>
+  <p>Endereço público: <a href="{{ url_for('publico.transparencia', slug=org.slug, _external=True) }}">{{ url_for('publico.transparencia', slug=org.slug, _external=True) }}</a></p>
+  <button class="botao">Salvar</button>
+</form>
+{% endblock %}

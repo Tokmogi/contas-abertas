@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<section class="destaque">
+  <h1>Transparência para quem faz muito com pouco</h1>
+  <p>O <strong>Contas Abertas</strong> ajuda ONGs, associações e projetos sociais pequenos a registrar
+    cada real recebido e gasto, guardar comprovantes e mostrar tudo numa página pública. Doadores confiam
+    mais, editais ficam mais fáceis e ninguém precisa entender de contabilidade.</p>
+  <a class="botao" href="{{ url_for('auth.cadastro') }}">Cadastrar minha organização (grátis)</a>
+</section>
+
+<h2>Organizações transparentes</h2>
+{% if orgs %}
+<ul class="lista-orgs">
+  {% for org in orgs %}
+  <li><a href="{{ url_for('publico.transparencia', slug=org.slug) }}"><strong>{{ org.nome }}</strong></a>
+    {% if org.causa %}<span>{{ org.causa }}</span>{% endif %}</li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="vazio">Nenhuma organização cadastrada ainda. Seja a primeira!</p>
+{% endif %}
+{% endblock %}

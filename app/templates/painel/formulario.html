@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block titulo %}{{ 'Editar' if lanc else 'Novo' }} lançamento{% endblock %}
+{% set tipo = form.tipo or (lanc.tipo if lanc else 'despesa') %}
+{% block conteudo %}
+<form method="post" enctype="multipart/form-data" class="formulario">
+  <h1>{{ 'Editar' if lanc else 'Novo' }} lançamento</h1>
+
+  <fieldset class="tipo">
+    <label><input type="radio" name="tipo" value="receita" {{ 'checked' if tipo == 'receita' }}> Entrada (dinheiro que chegou)</label>
+    <label><input type="radio" name="tipo" value="despesa" {{ 'checked' if tipo == 'despesa' }}> Saída (dinheiro gasto)</label>
+  </fieldset>
+
+  <label>Categoria
+    <select name="categoria" id="categoria" data-atual="{{ form.categoria or (lanc.categoria if lanc else '') }}"></select>
+  </label>
+  <label>Descrição<input name="descricao" value="{{ form.descricao or (lanc.descricao if lanc else '') }}" placeholder="Ex.: Cesta básica para 10 famílias" required></label>
+  <label>Valor (R$)<input name="valor" inputmode="decimal" value="{{ form.valor or (('%.2f'|format(lanc.valor)).replace('.', ',') if lanc else '') }}" placeholder="150,00" required></label>
+  <label>Data<input type="date" name="data" value="{{ form.data or (lanc.data.isoformat() if lanc else '') }}"></label>
+  <label>Comprovante (PDF ou foto da nota)<input type="file" name="comprovante" accept=".pdf,image/*" capture="environment"></label>
+  {% if lanc and lanc.comprovante %}<p>Já existe um comprovante. Envie outro só se quiser substituir.</p>{% endif %}
+
+  <button class="botao">Salvar</button>
+  <a href="{{ url_for('painel.inicio') }}">Cancelar</a>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  const opcoes = { receita: {{ receitas|tojson }}, despesa: {{ despesas|tojson }} };
+  const select = document.getElementById("categoria");
+  function preencher() {
+    const tipo = document.querySelector("input[name=tipo]:checked").value;
+    const atual = select.value || select.dataset.atual;
+    select.innerHTML = opcoes[tipo].map(c => `<option ${c === atual ? "selected" : ""}>${c}</option>`).join("");
+  }
+  document.querySelectorAll("input[name=tipo]").forEach(r => r.addEventListener("change", preencher));
+  preencher();
+</script>
+{% endblock %}

@@ -1,0 +1,38 @@
+<section class="cartoes">
+  <div class="cartao"><span>Entradas</span><strong class="positivo">{{ resumo.receitas|moeda }}</strong></div>
+  <div class="cartao"><span>Saídas</span><strong class="negativo">{{ resumo.despesas|moeda }}</strong></div>
+  <div class="cartao"><span>Saldo</span><strong>{{ resumo.saldo|moeda }}</strong></div>
+  <div class="cartao"><span>Saídas com comprovante</span><strong>{{ resumo.pct_comprovado }}%</strong></div>
+</section>
+
+{% if resumo.por_categoria %}
+<section class="graficos">
+  <div class="painel-grafico">
+    <h3>Para onde foi o dinheiro</h3>
+    <canvas id="grafico-categorias"></canvas>
+  </div>
+  <div class="painel-grafico">
+    <h3>Entradas e saídas por mês</h3>
+    <canvas id="grafico-meses"></canvas>
+  </div>
+</section>
+<script src="{{ url_for('static', filename='chart.umd.min.js') }}"></script>
+<script>
+  const categorias = {{ resumo.por_categoria|tojson }};
+  const meses = {{ resumo.por_mes|tojson }};
+  new Chart(document.getElementById("grafico-categorias"), {
+    type: "doughnut",
+    data: { labels: Object.keys(categorias), datasets: [{ data: Object.values(categorias).map(Number) }] },
+  });
+  new Chart(document.getElementById("grafico-meses"), {
+    type: "bar",
+    data: {
+      labels: Object.keys(meses),
+      datasets: [
+        { label: "Entradas", data: Object.values(meses).map(m => Number(m.receita)), backgroundColor: "#2e9e6b" },
+        { label: "Saídas", data: Object.values(meses).map(m => Number(m.despesa)), backgroundColor: "#d9534f" },
+      ],
+    },
+  });
+</script>
+{% endif %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block titulo %}Transparência · {{ org.nome }}{% endblock %}
+{% block conteudo %}
+<section class="destaque">
+  <h1>{{ org.nome }}</h1>
+  {% if org.causa %}<p>{{ org.causa }}</p>{% endif %}
+  {% if org.cnpj %}<p class="discreto">CNPJ {{ org.cnpj }}</p>{% endif %}
+</section>
+
+{% include "_resumo.html" %}
+
+<h2>Todas as movimentações</h2>
+{% if lancamentos %}
+<div class="tabela-rolagem">
+<table>
+  <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="num">Valor</th><th>Comprovante</th></tr></thead>
+  <tbody>
+  {% for l in lancamentos %}
+    <tr>
+      <td>{{ l.data.strftime('%d/%m/%Y') }}</td>
+      <td>{{ l.descricao }}</td>
+      <td>{{ l.categoria }}</td>
+      <td class="num {{ 'positivo' if l.tipo == 'receita' else 'negativo' }}">{{ l.valor_assinado|moeda }}</td>
+      <td>{% if l.comprovante %}✔ arquivado{% elif l.tipo == 'despesa' %}<span class="pendente">pendente</span>{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="discreto">Os comprovantes ficam guardados pela organização e podem ser solicitados a ela.
+  Eles não são publicados porque podem conter dados pessoais (LGPD).</p>
+{% else %}
+<p class="vazio">Esta organização ainda não publicou movimentações.</p>
+{% endif %}
+{% endblock %}

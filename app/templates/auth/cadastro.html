@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Cadastrar organização · Contas Abertas{% endblock %}
+{% block conteudo %}
+<form method="post" class="formulario">
+  <h1>Cadastre sua organização</h1>
+  <p>Gratuito. Em poucos minutos sua ONG terá uma página pública de transparência.</p>
+  <label>Nome da organização *<input name="organizacao" value="{{ form.organizacao }}" required></label>
+  <label>Causa (ex.: "Reforço escolar para crianças do bairro")<input name="causa" value="{{ form.causa }}"></label>
+  <label>CNPJ (se tiver)<input name="cnpj" value="{{ form.cnpj }}"></label>
+  <label>Seu nome *<input name="nome" value="{{ form.nome }}" required></label>
+  <label>E-mail *<input type="email" name="email" value="{{ form.email }}" required></label>
+  <label>Senha (mínimo 8 caracteres) *<input type="password" name="senha" minlength="8" required></label>
+  <button class="botao">Cadastrar</button>
+</form>
+{% endblock %}

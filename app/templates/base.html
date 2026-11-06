@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Contas Abertas{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='estilo.css') }}">
+</head>
+<body>
+  <header class="topo">
+    <a class="marca" href="{{ url_for('publico.inicio') }}">🔓 Contas Abertas</a>
+    <nav>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('painel.inicio') }}">Painel</a>
+        <a href="{{ url_for('publico.transparencia', slug=current_user.organizacao.slug) }}">Página pública</a>
+        <a href="{{ url_for('painel.configuracoes') }}">Configurações</a>
+        <a href="{{ url_for('auth.sair') }}">Sair</a>
+      {% else %}
+        <a href="{{ url_for('auth.entrar') }}">Entrar</a>
+        <a class="botao" href="{{ url_for('auth.cadastro') }}">Cadastrar organização</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main class="conteudo">
+    {% for categoria, mensagem in get_flashed_messages(with_categories=true) %}
+      <p class="aviso aviso-{{ categoria }}">{{ mensagem }}</p>
+    {% endfor %}
+    {% block conteudo %}{% endblock %}
+  </main>
+
+  <footer class="rodape">
+    Projeto social de código aberto · Transparência para quem faz muito com pouco
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

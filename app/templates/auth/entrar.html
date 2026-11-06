@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block titulo %}Entrar · Contas Abertas{% endblock %}
+{% block conteudo %}
+<form method="post" class="formulario">
+  <h1>Entrar</h1>
+  <label>E-mail<input type="email" name="email" required></label>
+  <label>Senha<input type="password" name="senha" required></label>
+  <button class="botao">Entrar</button>
+  <p>Ainda não tem conta? <a href="{{ url_for('auth.cadastro') }}">Cadastre sua organização</a>.</p>
+</form>
+{% endblock %}

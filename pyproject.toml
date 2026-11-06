@@ -1,0 +1,9 @@
+[project]
+name = "contas-abertas"
+version = "0.1.0"
+description = "Transparência financeira para organizações sociais pequenas"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
